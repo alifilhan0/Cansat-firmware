@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+/home/alif/Desktop/Cansat_firmware/project-name/build/CMakeFiles/bootloader
+/home/alif/Desktop/Cansat_firmware/project-name/build/CMakeFiles/bootloader.rule
+/home/alif/Desktop/Cansat_firmware/project-name/build/CMakeFiles/bootloader-complete.rule
+/home/alif/Desktop/Cansat_firmware/project-name/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+/home/alif/Desktop/Cansat_firmware/project-name/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+/home/alif/Desktop/Cansat_firmware/project-name/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+/home/alif/Desktop/Cansat_firmware/project-name/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+/home/alif/Desktop/Cansat_firmware/project-name/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+/home/alif/Desktop/Cansat_firmware/project-name/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+/home/alif/Desktop/Cansat_firmware/project-name/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule

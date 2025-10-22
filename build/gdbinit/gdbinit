@@ -1,0 +1,2 @@
+source /home/alif/Desktop/Cansat_firmware/project-name/build/gdbinit/symbols
+source /home/alif/Desktop/Cansat_firmware/project-name/build/gdbinit/connect
