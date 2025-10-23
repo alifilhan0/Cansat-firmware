@@ -11,6 +11,36 @@
  **********************************************************************************/
 #include "common.h"
 
+int rotate_servo(int number)
+{
+    return -1;
+}
+
+int steer(float degree)
+{
+    return -1;
+}
+
+int check_container(void)
+{
+    return -1;
+}
+
+int check_payload(void)
+{
+    return -1;
+}
+
+int check_parafoil(void)
+{
+    return -1;
+}
+
+int release_parafoil(void)
+{
+    return -1;
+}
+
 int release_payload(void)
 {
     /* Implement Later*/

@@ -43,21 +43,22 @@ extern float direction;
 extern float latitude, longitude;
 extern float x, y, z;
 extern bool descending;
+extern bool landed;
 /* Sensor functions */
 
 extern int get_distance(float distance);
 extern int get_altitude(float alt);
-extern int get_internal_temperature(float int_temp);
-extern int get_gps_cords(float latitude, float longitude);
-extern int get_air_temperature(float air_temp);
+extern int get_temperature(float temp);
+extern int get_gps_cords(float latitude, float longitude, int stats, int hours, int minutes, int seconds);
 extern int get_air_pressure(float air_press);
-extern int get_10dof(float pitch, float roll, float yaw);
-extern int compass_get(float x, float y, float z);
+extern int get_10dof(float pitch, float roll, float yaw, float accel_roll, float accel_pitch, float accel_yaw, float mag_roll, float mag_pitch, float mag_yaw);
+extern int get_voltage(float voltage);
 extern int trigger_buzzer(void);
 extern void xBee_command_handler(char* cmd);
 
 struct xBee_data
 {
+    int id;
     float distance;
     float altitude;
     float gyro_r, gyro_p, gyro_y;
@@ -65,16 +66,18 @@ struct xBee_data
     float temperature;
     float pressure;
     float voltage;
-    float accel_x, acel_y, accel_z;
+    float accel_r, accel_p, accel_y;
     float mag_r, mag_p, mag_y;
-    float rotation_rate;
-    int gpstime;
+    int rotation_rate;
     int gps_stats;
     int hh, mm, ss;
     char state[16];
-    char mode;
+    char mode[20];
+    int pkt_no;
+    int gps_hh, gps_mm, gps_ss;
+    float gps_altitude;
 
-}
+};
 //TODO:- basically all of them for now
 /* Mechanism */
 
@@ -84,7 +87,7 @@ extern int check_parafoil(void);
 extern int release_parafoil(void);
 extern int release_payload(void);
 extern int release_container(void);
-extern int steer(int degree);
+extern int steer(float degree);
 extern int rotate_servo(int number);
 /* Radio */
 extern int xBee_send(void);

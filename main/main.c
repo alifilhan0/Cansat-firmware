@@ -22,11 +22,14 @@ float internal_temperature = 0;
 float altitude = 0;
 float direction = 0;
 float x = 0, y = 0, z = 0;
-char cmd = 0;
 float latitude = 0, longitude = 0;
 float prev_altitude = 0;
 bool descending = false;
+bool landed = false;
+bool payload_released = false;
+bool container_released = false;
 int cnt = 0;
+float max_altitude = 0;
 struct xBee_data *data;
 
 static void i2c_master_init(i2c_master_bus_handle_t *bus_handle, i2c_master_dev_handle_t *dev_handle)
@@ -74,7 +77,7 @@ void radio_task(void *pvParameters)
 {
     while(1)
     {
-        if(xSemaphore != NULL)
+        if(xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE)
         {
             xSemaphoreTake(xSemaphore);
             xBee_command_handler(cmd);
@@ -85,13 +88,15 @@ void radio_task(void *pvParameters)
 }
 void ascending_task(void *pvParameters)
 {
+    struct xBee_data *data;
     while(1)
     {
-        if(descending  == false) //cansat is not descending
+        if(descending  == false && landed == false) //cansat is not descending
         {
-            if(xSemaphore != NULL)
+            if(xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE)
             {
                 xSemaphoreTake(xSemaphore);
+                strcpy(data->state, "ASCEND");
                 get_altitude(altitude);
                 if(prev_altitude > altitude)
                 {
@@ -99,6 +104,7 @@ void ascending_task(void *pvParameters)
                     if(cnt => 10)
                     {
                         descending = true; // since more than 10 counts suggest decreasing altitude, it must be descending
+                        max_altitude = altitude;
                     }
                 }
                 prev_altitude = altitude;
@@ -116,19 +122,48 @@ void ascending_task(void *pvParameters)
 
 void descending_task(void *pvParameters)
 {
+    struct xBee_data *data;
     while(1)
     {
-        if(descending == true)
+        if(descending == true && landed == false)
         {
-            if(xSemaphore != NULL)
+            if(xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE)
             {
                 xSemaphoreTake(xSemaphore);
+                strcpy(data->state, "DESCEND");
                 get_altitude(altitude);
-                if(altitude =< prev_altitude) //Land condition
+
+                if(altitude =< max_altitude*0.8 && payload_released == false && container_released == false) //release payload at 80% of flight altitude
+                {
+                    //TODO:- Fix the release algorithms
+                    release_payload();
+                    printf("Payload release\n");
+                    if(check_payload())
+                    {
+                        payload_released = true;
+                        printf("Payload released successfully\n");
+                    }
+                }
+
+                else if(altitude =< max_altitude*0.8*0.8 && payload_released == true && container_released == false) //release container at 80% of peak altitude
+                {
+                    release_container();
+                    if(check_container())
+                    {
+                        container_released = true;
+                        printf("Container released successfully\n");
+                    }
+                }
+
+                if(altitude)
+
+                if(altitude == prev_altitude) //Land condition
                 {
                     cnt++;
                     if(cnt =>20)
                     {
+                        strcpy(data->state, "LANDED");
+                        landed = true;
                         trigger_buzzer(); //Audio beacon
                     }
                 }
@@ -139,16 +174,35 @@ void descending_task(void *pvParameters)
         }
     }
 }
+
+void landed_task(void *pvParameters)
+{
+    struct xBee_data *data;
+    while(1)
+    {
+        if(landed == true)
+        {
+            if(xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE)
+            {
+                xSemaphoreTake(xSemaphore);
+                strcpy(data->state, "LANDED");
+                send_data();
+                xSemaphoreGive(xSemaphore);
+
+            }
+        }
+
+    }
+}
 void app_main(void)
 {
-    uint8_t data[2];
     i2c_master_bus_handle_t bus_handle;
     i2c_master_dev_handle_t dev_handle;
     i2c_master_init(&bus_handle, &dev_handle);
     ESP_LOGI(TAG, "I2C initialized successfully");
 
     uart_config_t uart_config = {
-        .baud_rate = 921600,
+        .baud_rate = 115200,
         .data_bits = UART_DATA_8_BITS,
         .parity = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
@@ -164,5 +218,7 @@ void app_main(void)
     xBee_init();
     xSemaphore = xSemaphoreCreateBinary();
     xTaskCreatePinnedToCore(radio_task, "radio_task", configMINIMAL_STACK_SIZE * 8, NULL, 5, NULL, 1);
-    xTaskCreatePinnedToCore(ascending_task, "sensor_task", configMINIMAL_STACK_SIZE * 8, NULL, 5, NULL, 1);
+    xTaskCreatePinnedToCore(ascending_task, "ascending_task", configMINIMAL_STACK_SIZE * 8, NULL, 5, NULL, 1);
+    xTaskCreatePinnedToCore(descending_task, "descending_task", configMINIMAL_STACK_SIZE * 8, NULL, 5, NULL, 1);
+    xTaskCreatePinnedToCore(landed_task, "landed_task", configMINIMAL_STACK_SIZE * 8, NULL, 5, NULL, 1);
 }
