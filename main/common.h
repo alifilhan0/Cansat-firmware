@@ -6,13 +6,19 @@
  * 
  * 
  **********************************************************************************/
+
+#pragma once
+
 #include <stdio.h>
+#include <string.h>
 #include <stdbool.h>
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
 #include "driver/i2c_master.h"
+#include "driver/gpio.h"
+#include "driver/uart.h"
 
 /* Definitions */
 /* I2C */
@@ -32,29 +38,6 @@
 #define BUF_SIZE (1024)
 #define RD_BUF_SIZE (BUF_SIZE)
 static QueueHandle_t uart0_queue;
-
-/* General purpose global variables */
-
-extern float air_temperature;
-extern float air_pressure;
-extern float altitude;
-extern float internal_temperature;
-extern float direction;
-extern float latitude, longitude;
-extern float x, y, z;
-extern bool descending;
-extern bool landed;
-/* Sensor functions */
-
-extern int get_distance(float distance);
-extern int get_altitude(float alt);
-extern int get_temperature(float temp);
-extern int get_gps_cords(float latitude, float longitude, int stats, int hours, int minutes, int seconds);
-extern int get_air_pressure(float air_press);
-extern int get_10dof(float pitch, float roll, float yaw, float accel_roll, float accel_pitch, float accel_yaw, float mag_roll, float mag_pitch, float mag_yaw);
-extern int get_voltage(float voltage);
-extern int trigger_buzzer(void);
-extern void xBee_command_handler(char* cmd);
 
 struct xBee_data
 {
@@ -78,7 +61,40 @@ struct xBee_data
     float gps_altitude;
 
 };
+
+/* General purpose global variables */
+
+extern float air_temperature;
+extern float air_pressure;
+extern float altitude;
+extern float internal_temperature;
+extern float direction;
+extern float latitude, longitude;
+
+extern bool descending;
+extern bool landed;
+extern bool payload_released;
+extern bool container_released;
+extern bool parafoil_released;
+
+extern bool simulation_enable;
+extern bool simulation_activate;
+
 //TODO:- basically all of them for now
+/* Sensor functions */
+
+extern int get_distance(float distance);
+extern int get_altitude(float alt);
+extern int get_temperature(float temp);
+extern int get_gps_cords(float latitude, float longitude, int stats, int hours, int minutes, int seconds);
+extern int get_air_pressure(float air_press);
+extern int get_10dof(float pitch, float roll, float yaw, float accel_roll, float accel_pitch, float accel_yaw, float mag_roll, float mag_pitch, float mag_yaw);
+extern int get_voltage(float voltage);
+extern int trigger_buzzer(void);
+extern int xBee_command_handler(char* cmd, char *cmd);
+extern int send_data(struct xBee_data *data);
+extern int sensor_checkup();
+
 /* Mechanism */
 
 extern int check_payload_attached(void);
@@ -89,6 +105,9 @@ extern int release_payload(void);
 extern int release_container(void);
 extern int steer(float degree);
 extern int rotate_servo(int number);
+extern int system_checkup(void);
+
 /* Radio */
-extern int xBee_send(void);
-extern int xBee_receive(void);
+
+extern int xBee_send(struct xBee_data *data);
+extern int xBee_receive(struct xBee_data *data);
